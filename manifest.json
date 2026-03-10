@@ -1,0 +1,42 @@
+{
+  "name": "NelSystems Dashboard",
+  "short_name": "NelSystems",
+  "description": "Sistema de gestión de servicios SaaS - NelSystems",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#FDB022",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./assets/images/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/images/logo-512.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity", "finance"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "./",
+      "description": "Ver panel principal"
+    },
+    {
+      "name": "Clientes",
+      "url": "./#/clients",
+      "description": "Gestionar clientes"
+    },
+    {
+      "name": "Servicios",
+      "url": "./#/services",
+      "description": "Gestionar servicios"
+    }
+  ]
+}
