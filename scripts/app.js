@@ -249,56 +249,6 @@ class App {
       }
     });
 
-//Agregar método openClientForm a la clase App:
-
-```javascript
-/**
- * Abre formulario para crear/editar cliente
- */
-openClientForm(clientId = null) {
-  const client = clientId ? clientsService.getById(clientId) : {};
-  
-  modal.createForm({
-    title: clientId ? 'Editar Cliente' : 'Nuevo Cliente',
-    fields: [
-      { name: 'name', label: 'Nombre', type: 'text', required: true },
-      { name: 'company', label: 'Empresa', type: 'text' },
-      { name: 'email', label: 'Email', type: 'email', required: true },
-      { name: 'phone', label: 'Teléfono', type: 'tel' },
-      { name: 'address', label: 'Dirección', type: 'text' },
-      { name: 'taxId', label: 'RFC/Tax ID', type: 'text' },
-      { name: 'website', label: 'Sitio Web', type: 'url' },
-      { 
-        name: 'status', 
-        label: 'Estado', 
-        type: 'select',
-        options: [
-          { value: 'active', label: 'Activo' },
-          { value: 'inactive', label: 'Inactivo' },
-          { value: 'suspended', label: 'Suspendido' }
-        ],
-        required: true
-      },
-      { name: 'notes', label: 'Notas', type: 'textarea', rows: 4 }
-    ],
-    data: client,
-    onSubmit: (values) => {
-      if (clientId) {
-        const success = clientsService.update(clientId, values);
-        if (success) {
-          this.navigate('clients'); // Recargar vista
-        }
-        return success;
-      } else {
-        const newClient = clientsService.create(values);
-        if (newClient) {
-          this.navigate('clients'); // Recargar vista
-        }
-        return newClient !== null;
-      }
-    }
-  });
-}
     
     // Cerrar sidebar en mobile
     if (window.innerWidth < 768) {
@@ -378,6 +328,57 @@ openClientForm(clientId = null) {
     document.title = `${title} - NelSystems Dashboard`;
   }
 
+//Agregar método openClientForm a la clase App:
+
+```javascript
+/**
+ * Abre formulario para crear/editar cliente
+ */
+openClientForm(clientId = null) {
+  const client = clientId ? clientsService.getById(clientId) : {};
+  
+  modal.createForm({
+    title: clientId ? 'Editar Cliente' : 'Nuevo Cliente',
+    fields: [
+      { name: 'name', label: 'Nombre', type: 'text', required: true },
+      { name: 'company', label: 'Empresa', type: 'text' },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'phone', label: 'Teléfono', type: 'tel' },
+      { name: 'address', label: 'Dirección', type: 'text' },
+      { name: 'taxId', label: 'RFC/Tax ID', type: 'text' },
+      { name: 'website', label: 'Sitio Web', type: 'url' },
+      { 
+        name: 'status', 
+        label: 'Estado', 
+        type: 'select',
+        options: [
+          { value: 'active', label: 'Activo' },
+          { value: 'inactive', label: 'Inactivo' },
+          { value: 'suspended', label: 'Suspendido' }
+        ],
+        required: true
+      },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 4 }
+    ],
+    data: client,
+    onSubmit: (values) => {
+      if (clientId) {
+        const success = clientsService.update(clientId, values);
+        if (success) {
+          this.navigate('clients'); // Recargar vista
+        }
+        return success;
+      } else {
+        const newClient = clientsService.create(values);
+        if (newClient) {
+          this.navigate('clients'); // Recargar vista
+        }
+        return newClient !== null;
+      }
+    }
+  });
+}
+  
   /**
    * Renderiza el dashboard
    */
