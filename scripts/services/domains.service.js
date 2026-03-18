@@ -185,7 +185,22 @@ class DomainsService {
 
     return { valid: true };
   }
+
+getStats() {
+    const domains = this.getAll();
+    const expiringSoon = this.getExpiringSoon(30);
+    const critical = this.getExpiringSoon(7);
+    
+    return {
+      total: domains.length,
+      active: domains.filter(d => d.status === 'active').length,
+      expired: domains.filter(d => d.status === 'expired').length,
+      expiringSoon: expiringSoon.length,
+      critical: critical.length
+    };
+  }
 }
+  
 
 export const domainsService = new DomainsService();
 export default domainsService;
