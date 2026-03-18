@@ -9,7 +9,7 @@ import auth from './auth/auth.js';
 import db from './database/db.js';
 import dashboardService from './services/dashboard.service.js';
 import clientsService from './services/clients.service.js';
-import { formatCurrency, formatDate, getStatusColor, getInitials, showToast, getStatusBgColor, truncate } from './utils/helpers.js';
+import { formatCurrency, formatDate, getStatusColor, getInitials, showToast, getStatusBgColor, truncate, daysUntil } from './utils/helpers.js';
 import modal from './components/Modal.js';
 import projectsService from './services/projects.service.js';
 import servicesService from './services/services.service.js';
