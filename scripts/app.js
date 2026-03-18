@@ -9,7 +9,7 @@ import auth from './auth/auth.js';
 import db from './database/db.js';
 import dashboardService from './services/dashboard.service.js';
 import clientsService from './services/clients.service.js';
-import { formatCurrency, formatDate, getStatusColor, getInitials, showToast } from './utils/helpers.js';
+import { formatCurrency, formatDate, getStatusColor, getInitials, showToast, getStatusBgColor, truncate } from './utils/helpers.js';
 import modal from './components/Modal.js';
 import projectsService from './services/projects.service.js';
 import servicesService from './services/services.service.js';
@@ -577,9 +577,134 @@ openClientForm(clientId = null) {
   /**
    * Renderiza placeholder para otras vistas
    */
-  renderProjects(container) {
-    this.renderPlaceholder(container, 'Proyectos', 'Esta sección está en desarrollo');
-  }
+renderProjects(container) {
+  const projects = projectsService.getAll();
+  const clients = clientsService.getAll();
+  const stats = projectsService.getStats();
+  
+  container.innerHTML = `
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Proyectos</h2>
+          <p style="color: var(--color-text-secondary);">${projects.length} proyecto${projects.length !== 1 ? 's' : ''} registrado${projects.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button class="btn btn-primary" onclick="window.app.openProjectForm()">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nuevo Proyecto
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-4" style="margin-bottom: var(--space-lg);">
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">En Progreso</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-warning);">${stats.inProgress}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Desplegados</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${stats.deployed}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">En Testing</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-info);">${stats.testing}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Alta Prioridad</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-error);">${stats.highPriority}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${projects.length > 0 ? `
+      <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border-primary);">
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Proyecto</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Cliente</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Estado</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Prioridad</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Fecha Entrega</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${projects.map(project => {
+              const client = clients.find(c => c.id === project.clientId);
+              const statusLabels = {
+                planning: 'Planificación',
+                in_progress: 'En Progreso',
+                testing: 'Testing',
+                deployed: 'Desplegado',
+                maintenance: 'Mantenimiento',
+                cancelled: 'Cancelado'
+              };
+              const priorityLabels = {
+                low: 'Baja',
+                medium: 'Media',
+                high: 'Alta',
+                critical: 'Crítica'
+              };
+              
+              return `
+                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                  <td style="padding: var(--space-sm);">
+                    <div style="font-weight: 600; margin-bottom: 2px;">${project.name}</div>
+                    ${project.description ? `<div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">${truncate(project.description, 50)}</div>` : ''}
+                  </td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${client?.name || 'Sin cliente'}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(project.status)}; color: ${getStatusColor(project.status)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600;">
+                      ${statusLabels[project.status]}
+                    </span>
+                  </td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(project.priority)}; color: ${getStatusColor(project.priority)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600;">
+                      ${priorityLabels[project.priority]}
+                    </span>
+                  </td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">
+                    ${project.deliveryDate ? formatDate(project.deliveryDate) : '-'}
+                  </td>
+                  <td style="padding: var(--space-sm); text-align: right;">
+                    <button 
+                      class="btn-icon" 
+                      onclick="window.app.openProjectForm('${project.id}')"
+                      title="Editar"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button 
+                      class="btn-icon" 
+                      onclick="if(confirm('¿Eliminar este proyecto?')) { projectsService.delete('${project.id}'); window.app.navigate('projects'); }"
+                      title="Eliminar"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="card" style="text-align: center; padding: var(--space-2xl);">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay proyectos registrados</p>
+        <button class="btn btn-primary" onclick="window.app.openProjectForm()">Crear Primer Proyecto</button>
+      </div>
+    `}
+  `;
+}
 
   renderServices(container) {
     this.renderPlaceholder(container, 'Servicios', 'Esta sección está en desarrollo');
