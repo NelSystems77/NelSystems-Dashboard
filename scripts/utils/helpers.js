@@ -276,6 +276,30 @@ export function addMonths(date, months) {
 }
 
 /**
+ * Agrega meses a una fecha
+ * @param {Date} date - Fecha base
+ * @param {number} months - Meses a agregar
+ * @returns {Date} Nueva fecha
+ */
+export function addMonths(date, months) {
+  const newDate = new Date(date);
+  newDate.setMonth(newDate.getMonth() + months);
+  return newDate;
+}
+
+/**
+ * Agrega años a una fecha
+ * @param {Date} date - Fecha base
+ * @param {number} years - Años a agregar
+ * @returns {Date} Nueva fecha
+ */
+export function addYears(date, years) {
+  const newDate = new Date(date);
+  newDate.setFullYear(newDate.getFullYear() + years);
+  return newDate;
+}
+
+/**
  * Agrega días a una fecha
  * @param {Date} date - Fecha base
  * @param {number} days - Días a agregar
