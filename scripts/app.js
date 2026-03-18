@@ -780,29 +780,957 @@ renderProjects(container) {
   `;
 }
 
-  renderServices(container) {
-    this.renderPlaceholder(container, 'Servicios', 'Esta sección está en desarrollo');
-  }
+renderServices(container) {
+  const services = servicesService.getAll();
+  const clients = clientsService.getAll();
+  const stats = servicesService.getStats();
+  
+  container.innerHTML = `
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Servicios</h2>
+          <p style="color: var(--color-text-secondary);">${services.length} servicio${services.length !== 1 ? 's' : ''} registrado${services.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button class="btn btn-primary" onclick="window.app.openServiceForm()">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nuevo Servicio
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-4" style="margin-bottom: var(--space-lg);">
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Activos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${stats.active}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Vencidos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-error);">${stats.expired}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Pendientes</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-warning);">${stats.pending}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Total</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-primary);">${stats.total}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${services.length > 0 ? `
+      <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border-primary);">
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Servicio</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Cliente</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Tipo</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Ciclo</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Monto</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Estado</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${services.map(service => {
+              const client = clients.find(c => c.id === service.clientId);
+              return `
+                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                  <td style="padding: var(--space-sm); font-weight: 600;">${service.name}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${client?.name || '-'}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: var(--color-bg-secondary); border-radius: var(--radius-sm); font-size: var(--font-size-xs); text-transform: capitalize;">${service.type}</span>
+                  </td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary); text-transform: capitalize;">${service.billingCycle}</td>
+                  <td style="padding: var(--space-sm); text-align: right; font-weight: 600;">${formatCurrency(service.amount)}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(service.status)}; color: ${getStatusColor(service.status)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600; text-transform: capitalize;">${service.status}</span>
+                  </td>
+                  <td style="padding: var(--space-sm); text-align: right;">
+                    <button class="btn-icon" onclick="window.app.openServiceForm('${service.id}')" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-icon" onclick="if(confirm('¿Eliminar?')) { servicesService.delete('${service.id}'); window.app.navigate('services'); }" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="card" style="text-align: center; padding: var(--space-2xl);">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay servicios registrados</p>
+        <button class="btn btn-primary" onclick="window.app.openServiceForm()">Crear Primer Servicio</button>
+      </div>
+    `}
+  `;
+}
 
-  renderDomains(container) {
-    this.renderPlaceholder(container, 'Dominios', 'Esta sección está en desarrollo');
-  }
+// Formulario de Servicios - Agregar después de openProjectForm()
+openServiceForm(serviceId = null) {
+  const service = serviceId ? servicesService.getById(serviceId) : {};
+  const clients = clientsService.getAll({ status: 'active' });
+  
+  modal.createForm({
+    title: serviceId ? 'Editar Servicio' : 'Nuevo Servicio',
+    fields: [
+      { name: 'clientId', label: 'Cliente', type: 'select', options: clients.map(c => ({ value: c.id, label: c.name })), required: true },
+      { name: 'name', label: 'Nombre del Servicio', type: 'text', required: true },
+      { name: 'type', label: 'Tipo', type: 'select', options: [
+        { value: 'hosting', label: 'Hosting' },
+        { value: 'domain', label: 'Dominio' },
+        { value: 'development', label: 'Desarrollo' },
+        { value: 'maintenance', label: 'Mantenimiento' },
+        { value: 'license', label: 'Licencia' },
+        { value: 'saas', label: 'SaaS' },
+        { value: 'other', label: 'Otro' }
+      ], required: true },
+      { name: 'description', label: 'Descripción', type: 'textarea', rows: 2 },
+      { name: 'provider', label: 'Proveedor', type: 'text' },
+      { name: 'billingCycle', label: 'Ciclo de Facturación', type: 'select', options: [
+        { value: 'monthly', label: 'Mensual' },
+        { value: 'quarterly', label: 'Trimestral' },
+        { value: 'biannual', label: 'Semestral' },
+        { value: 'annual', label: 'Anual' },
+        { value: 'one_time', label: 'Pago Único' }
+      ], required: true },
+      { name: 'amount', label: 'Monto', type: 'number', required: true, placeholder: '0.00' },
+      { name: 'currency', label: 'Moneda', type: 'select', options: [
+        { value: 'USD', label: 'USD' },
+        { value: 'EUR', label: 'EUR' },
+        { value: 'MXN', label: 'MXN' }
+      ] },
+      { name: 'startDate', label: 'Fecha de Inicio', type: 'date', required: true },
+      { name: 'endDate', label: 'Fecha de Vencimiento', type: 'date' },
+      { name: 'status', label: 'Estado', type: 'select', options: [
+        { value: 'active', label: 'Activo' },
+        { value: 'expired', label: 'Vencido' },
+        { value: 'cancelled', label: 'Cancelado' },
+        { value: 'pending', label: 'Pendiente' }
+      ], required: true },
+      { name: 'autoRenew', label: 'Auto-renovar', type: 'checkbox' },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 2 }
+    ],
+    data: service,
+    onSubmit: (values) => {
+      if (serviceId) {
+        const success = servicesService.update(serviceId, values);
+        if (success) this.navigate('services');
+        return success;
+      } else {
+        const newService = servicesService.create(values);
+        if (newService) this.navigate('services');
+        return newService !== null;
+      }
+    }
+  });
+}
 
-  renderHosting(container) {
-    this.renderPlaceholder(container, 'Hosting', 'Esta sección está en desarrollo');
-  }
+renderDomains(container) {
+  const domains = domainsService.getAll();
+  const clients = clientsService.getAll();
+  const stats = domainsService.getStats();
+  
+  container.innerHTML = `
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Dominios</h2>
+          <p style="color: var(--color-text-secondary);">${domains.length} dominio${domains.length !== 1 ? 's' : ''} registrado${domains.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button class="btn btn-primary" onclick="window.app.openDomainForm()">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nuevo Dominio
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-4" style="margin-bottom: var(--space-lg);">
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Activos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${stats.active}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Vencen Pronto</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-warning);">${stats.expiringSoon}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Críticos (7 días)</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-error);">${stats.critical}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Vencidos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-tertiary);">${stats.expired}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${domains.length > 0 ? `
+      <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border-primary);">
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Dominio</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Cliente</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Registrador</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Vence</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Días</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Estado</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${domains.map(domain => {
+              const client = clients.find(c => c.id === domain.clientId);
+              const daysLeft = daysUntil(domain.expirationDate);
+              return `
+                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                  <td style="padding: var(--space-sm); font-weight: 600;">${domain.domain}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${client?.name || '-'}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${domain.registrar}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${formatDate(domain.expirationDate)}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="color: ${daysLeft <= 7 ? 'var(--color-error)' : daysLeft <= 30 ? 'var(--color-warning)' : 'var(--color-success)'}; font-weight: 600;">
+                      ${daysLeft} días
+                    </span>
+                  </td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(domain.status)}; color: ${getStatusColor(domain.status)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600; text-transform: capitalize;">${domain.status}</span>
+                  </td>
+                  <td style="padding: var(--space-sm); text-align: right;">
+                    <button class="btn-icon" onclick="window.app.openDomainForm('${domain.id}')" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-icon" onclick="if(confirm('¿Eliminar?')) { domainsService.delete('${domain.id}'); window.app.navigate('domains'); }" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="card" style="text-align: center; padding: var(--space-2xl);">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay dominios registrados</p>
+        <button class="btn btn-primary" onclick="window.app.openDomainForm()">Registrar Primer Dominio</button>
+      </div>
+    `}
+  `;
+}
 
-  renderLicenses(container) {
-    this.renderPlaceholder(container, 'Licencias', 'Esta sección está en desarrollo');
-  }
+openDomainForm(domainId = null) {
+  const domain = domainId ? domainsService.getById(domainId) : {};
+  const clients = clientsService.getAll({ status: 'active' });
+  
+  modal.createForm({
+    title: domainId ? 'Editar Dominio' : 'Nuevo Dominio',
+    fields: [
+      { name: 'clientId', label: 'Cliente', type: 'select', options: clients.map(c => ({ value: c.id, label: c.name })), required: true },
+      { name: 'domain', label: 'Dominio', type: 'text', required: true, placeholder: 'ejemplo.com' },
+      { name: 'registrar', label: 'Registrador', type: 'text', required: true, placeholder: 'GoDaddy, Namecheap, etc.' },
+      { name: 'registrationDate', label: 'Fecha de Registro', type: 'date', required: true },
+      { name: 'expirationDate', label: 'Fecha de Expiración', type: 'date', required: true },
+      { name: 'price', label: 'Precio Anual', type: 'number', placeholder: '0.00' },
+      { name: 'dnsProvider', label: 'Proveedor DNS', type: 'text', placeholder: 'Cloudflare, Route53, etc.' },
+      { name: 'autoRenew', label: 'Auto-renovar', type: 'checkbox' },
+      { name: 'status', label: 'Estado', type: 'select', options: [
+        { value: 'active', label: 'Activo' },
+        { value: 'expired', label: 'Vencido' },
+        { value: 'pending_transfer', label: 'Transferencia Pendiente' },
+        { value: 'locked', label: 'Bloqueado' }
+      ], required: true },
+      { name: 'reminderDays', label: 'Recordar X días antes', type: 'number', placeholder: '30' },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 2 }
+    ],
+    data: domain,
+    onSubmit: (values) => {
+      if (domainId) {
+        const success = domainsService.update(domainId, values);
+        if (success) this.navigate('domains');
+        return success;
+      } else {
+        const newDomain = domainsService.create(values);
+        if (newDomain) this.navigate('domains');
+        return newDomain !== null;
+      }
+    }
+  });
+}
 
-  renderTickets(container) {
-    this.renderPlaceholder(container, 'Tickets', 'Esta sección está en desarrollo');
-  }
+renderHosting(container) {
+  const hosting = hostingService.getAll();
+  const clients = clientsService.getAll();
+  const stats = hostingService.getStats();
+  
+  container.innerHTML = `
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Hosting</h2>
+          <p style="color: var(--color-text-secondary);">${hosting.length} plan${hosting.length !== 1 ? 'es' : ''} de hosting</p>
+        </div>
+        <button class="btn btn-primary" onclick="window.app.openHostingForm()">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nuevo Hosting
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-4" style="margin-bottom: var(--space-lg);">
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Activos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${stats.active}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Suspendidos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-warning);">${stats.suspended}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Cancelados</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-tertiary);">${stats.cancelled}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Total</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-primary);">${stats.total}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${hosting.length > 0 ? `
+      <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border-primary);">
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Proveedor / Plan</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Cliente</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Servidor</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Renovación</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Costo</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Estado</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${hosting.map(host => {
+              const client = clients.find(c => c.id === host.clientId);
+              return `
+                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                  <td style="padding: var(--space-sm);">
+                    <div style="font-weight: 600;">${host.provider}</div>
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">${host.plan}</div>
+                  </td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${client?.name || '-'}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${host.server || '-'}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${formatDate(host.renewalDate)}</td>
+                  <td style="padding: var(--space-sm); text-align: right; font-weight: 600;">${formatCurrency(host.cost)}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(host.status)}; color: ${getStatusColor(host.status)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600; text-transform: capitalize;">${host.status}</span>
+                  </td>
+                  <td style="padding: var(--space-sm); text-align: right;">
+                    <button class="btn-icon" onclick="window.app.openHostingForm('${host.id}')" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-icon" onclick="if(confirm('¿Eliminar?')) { hostingService.delete('${host.id}'); window.app.navigate('hosting'); }" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="card" style="text-align: center; padding: var(--space-2xl);">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay planes de hosting registrados</p>
+        <button class="btn btn-primary" onclick="window.app.openHostingForm()">Agregar Primer Hosting</button>
+      </div>
+    `}
+  `;
+}
 
-  renderPayments(container) {
-    this.renderPlaceholder(container, 'Pagos', 'Esta sección está en desarrollo');
-  }
+openHostingForm(hostingId = null) {
+  const hosting = hostingId ? hostingService.getById(hostingId) : {};
+  const clients = clientsService.getAll({ status: 'active' });
+  
+  modal.createForm({
+    title: hostingId ? 'Editar Hosting' : 'Nuevo Hosting',
+    fields: [
+      { name: 'clientId', label: 'Cliente', type: 'select', options: clients.map(c => ({ value: c.id, label: c.name })), required: true },
+      { name: 'provider', label: 'Proveedor', type: 'text', required: true, placeholder: 'AWS, DigitalOcean, Hostinger...' },
+      { name: 'plan', label: 'Plan', type: 'text', required: true, placeholder: 'Basic, Premium, Enterprise...' },
+      { name: 'server', label: 'Servidor', type: 'text', placeholder: 'us-east-1, server-01...' },
+      { name: 'ipAddress', label: 'Dirección IP', type: 'text', placeholder: '192.168.1.1' },
+      { name: 'storage', label: 'Almacenamiento', type: 'text', placeholder: '10GB, 100GB, 1TB...' },
+      { name: 'bandwidth', label: 'Ancho de Banda', type: 'text', placeholder: 'Ilimitado, 1TB/mes...' },
+      { name: 'startDate', label: 'Fecha de Inicio', type: 'date', required: true },
+      { name: 'renewalDate', label: 'Fecha de Renovación', type: 'date', required: true },
+      { name: 'cost', label: 'Costo', type: 'number', required: true, placeholder: '0.00' },
+      { name: 'billingCycle', label: 'Ciclo', type: 'select', options: [
+        { value: 'monthly', label: 'Mensual' },
+        { value: 'annual', label: 'Anual' }
+      ], required: true },
+      { name: 'cpanelUrl', label: 'URL cPanel', type: 'url', placeholder: 'https://...' },
+      { name: 'ftpHost', label: 'FTP Host', type: 'text', placeholder: 'ftp.example.com' },
+      { name: 'status', label: 'Estado', type: 'select', options: [
+        { value: 'active', label: 'Activo' },
+        { value: 'suspended', label: 'Suspendido' },
+        { value: 'cancelled', label: 'Cancelado' }
+      ], required: true },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 2 }
+    ],
+    data: hosting,
+    onSubmit: (values) => {
+      if (hostingId) {
+        const success = hostingService.update(hostingId, values);
+        if (success) this.navigate('hosting');
+        return success;
+      } else {
+        const newHosting = hostingService.create(values);
+        if (newHosting) this.navigate('hosting');
+        return newHosting !== null;
+      }
+    }
+  });
+}
+
+renderLicenses(container) {
+  const licenses = licensesService.getAll();
+  const clients = clientsService.getAll();
+  const stats = licensesService.getStats();
+  
+  container.innerHTML = `
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Licencias</h2>
+          <p style="color: var(--color-text-secondary);">${licenses.length} licencia${licenses.length !== 1 ? 's' : ''} registrada${licenses.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button class="btn btn-primary" onclick="window.app.openLicenseForm()">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nueva Licencia
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-4" style="margin-bottom: var(--space-lg);">
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Activas</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${stats.active}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Vencidas</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-error);">${stats.expired}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Total Seats</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-primary);">${stats.totalSeats}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Total</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-primary);">${stats.total}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${licenses.length > 0 ? `
+      <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border-primary);">
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Licencia</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Cliente</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Tipo</th>
+              <th style="text-align: center; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Seats</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Costo</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Estado</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${licenses.map(license => {
+              const client = clients.find(c => c.id === license.clientId);
+              return `
+                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                  <td style="padding: var(--space-sm);">
+                    <div style="font-weight: 600;">${license.name}</div>
+                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">${license.provider}</div>
+                  </td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${client?.name || '-'}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: var(--color-bg-secondary); border-radius: var(--radius-sm); font-size: var(--font-size-xs); text-transform: capitalize;">${license.type.replace('_', ' ')}</span>
+                  </td>
+                  <td style="padding: var(--space-sm); text-align: center; font-weight: 600;">${license.seats}</td>
+                  <td style="padding: var(--space-sm); text-align: right; font-weight: 600;">${formatCurrency(license.cost)}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(license.status)}; color: ${getStatusColor(license.status)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600; text-transform: capitalize;">${license.status}</span>
+                  </td>
+                  <td style="padding: var(--space-sm); text-align: right;">
+                    <button class="btn-icon" onclick="window.app.openLicenseForm('${license.id}')" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-icon" onclick="if(confirm('¿Eliminar?')) { licensesService.delete('${license.id}'); window.app.navigate('licenses'); }" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="card" style="text-align: center; padding: var(--space-2xl);">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay licencias registradas</p>
+        <button class="btn btn-primary" onclick="window.app.openLicenseForm()">Agregar Primera Licencia</button>
+      </div>
+    `}
+  `;
+}
+
+openLicenseForm(licenseId = null) {
+  const license = licenseId ? licensesService.getById(licenseId) : {};
+  const clients = clientsService.getAll({ status: 'active' });
+  
+  modal.createForm({
+    title: licenseId ? 'Editar Licencia' : 'Nueva Licencia',
+    fields: [
+      { name: 'clientId', label: 'Cliente', type: 'select', options: clients.map(c => ({ value: c.id, label: c.name })), required: true },
+      { name: 'name', label: 'Nombre de la Licencia', type: 'text', required: true },
+      { name: 'type', label: 'Tipo', type: 'select', options: [
+        { value: 'google_workspace', label: 'Google Workspace' },
+        { value: 'microsoft_365', label: 'Microsoft 365' },
+        { value: 'plugin', label: 'Plugin' },
+        { value: 'api', label: 'API' },
+        { value: 'software', label: 'Software' },
+        { value: 'other', label: 'Otro' }
+      ], required: true },
+      { name: 'provider', label: 'Proveedor', type: 'text', required: true },
+      { name: 'licenseKey', label: 'Clave de Licencia', type: 'text' },
+      { name: 'seats', label: 'Número de Seats', type: 'number', placeholder: '1' },
+      { name: 'purchaseDate', label: 'Fecha de Compra', type: 'date', required: true },
+      { name: 'expirationDate', label: 'Fecha de Expiración', type: 'date' },
+      { name: 'renewalDate', label: 'Fecha de Renovación', type: 'date' },
+      { name: 'cost', label: 'Costo', type: 'number', required: true, placeholder: '0.00' },
+      { name: 'billingCycle', label: 'Ciclo', type: 'select', options: [
+        { value: 'monthly', label: 'Mensual' },
+        { value: 'annual', label: 'Anual' },
+        { value: 'perpetual', label: 'Perpetua' }
+      ], required: true },
+      { name: 'autoRenew', label: 'Auto-renovar', type: 'checkbox' },
+      { name: 'status', label: 'Estado', type: 'select', options: [
+        { value: 'active', label: 'Activa' },
+        { value: 'expired', label: 'Vencida' },
+        { value: 'cancelled', label: 'Cancelada' }
+      ], required: true },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 2 }
+    ],
+    data: license,
+    onSubmit: (values) => {
+      if (licenseId) {
+        const success = licensesService.update(licenseId, values);
+        if (success) this.navigate('licenses');
+        return success;
+      } else {
+        const newLicense = licensesService.create(values);
+        if (newLicense) this.navigate('licenses');
+        return newLicense !== null;
+      }
+    }
+  });
+}
+
+renderTickets(container) {
+  const tickets = ticketsService.getAll();
+  const clients = clientsService.getAll();
+  const stats = ticketsService.getStats();
+  
+  container.innerHTML = `
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Tickets de Soporte</h2>
+          <p style="color: var(--color-text-secondary);">${tickets.length} ticket${tickets.length !== 1 ? 's' : ''} registrado${tickets.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button class="btn btn-primary" onclick="window.app.openTicketForm()">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nuevo Ticket
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-5" style="margin-bottom: var(--space-lg);">
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Abiertos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-warning);">${stats.open}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">En Progreso</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-info);">${stats.in_progress}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Resueltos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${stats.resolved}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Cerrados</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-tertiary);">${stats.closed}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Urgentes</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-error);">${stats.urgent}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${tickets.length > 0 ? `
+      <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border-primary);">
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Ticket</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Cliente</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Tipo</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Prioridad</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Estado</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Asignado a</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tickets.map(ticket => {
+              const client = clients.find(c => c.id === ticket.clientId);
+              const priorityColors = {
+                low: 'var(--color-success)',
+                medium: 'var(--color-warning)',
+                high: 'var(--color-error)',
+                urgent: 'var(--color-error)'
+              };
+              const priorityLabels = {
+                low: 'Baja',
+                medium: 'Media',
+                high: 'Alta',
+                urgent: 'Urgente'
+              };
+              const statusLabels = {
+                open: 'Abierto',
+                in_progress: 'En Progreso',
+                resolved: 'Resuelto',
+                closed: 'Cerrado'
+              };
+              
+              return `
+                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                  <td style="padding: var(--space-sm);">
+                    <div style="font-weight: 600; margin-bottom: 2px;">#${ticket.id.slice(0,8)} - ${ticket.title}</div>
+                    ${ticket.description ? `<div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">${truncate(ticket.description, 50)}</div>` : ''}
+                  </td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${client?.name || '-'}</td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: var(--color-bg-secondary); border-radius: var(--radius-sm); font-size: var(--font-size-xs); text-transform: capitalize;">${ticket.type.replace('_', ' ')}</span>
+                  </td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${priorityColors[ticket.priority]}20; color: ${priorityColors[ticket.priority]}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600;">
+                      ${priorityLabels[ticket.priority]}
+                    </span>
+                  </td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(ticket.status)}; color: ${getStatusColor(ticket.status)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600;">
+                      ${statusLabels[ticket.status]}
+                    </span>
+                  </td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${ticket.assignedTo || 'Sin asignar'}</td>
+                  <td style="padding: var(--space-sm); text-align: right;">
+                    <button class="btn-icon" onclick="window.app.openTicketForm('${ticket.id}')" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-icon" onclick="if(confirm('¿Eliminar?')) { ticketsService.delete('${ticket.id}'); window.app.navigate('tickets'); }" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="card" style="text-align: center; padding: var(--space-2xl);">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay tickets registrados</p>
+        <button class="btn btn-primary" onclick="window.app.openTicketForm()">Crear Primer Ticket</button>
+      </div>
+    `}
+  `;
+}
+
+openTicketForm(ticketId = null) {
+  const ticket = ticketId ? ticketsService.getById(ticketId) : {};
+  const clients = clientsService.getAll({ status: 'active' });
+  
+  modal.createForm({
+    title: ticketId ? 'Editar Ticket' : 'Nuevo Ticket',
+    fields: [
+      { name: 'clientId', label: 'Cliente', type: 'select', options: clients.map(c => ({ value: c.id, label: c.name })), required: true },
+      { name: 'title', label: 'Título', type: 'text', required: true },
+      { name: 'description', label: 'Descripción', type: 'textarea', rows: 4, required: true },
+      { name: 'type', label: 'Tipo', type: 'select', options: [
+        { value: 'bug', label: 'Bug / Error' },
+        { value: 'feature', label: 'Nueva Funcionalidad' },
+        { value: 'support', label: 'Soporte Técnico' },
+        { value: 'question', label: 'Consulta' },
+        { value: 'maintenance', label: 'Mantenimiento' }
+      ], required: true },
+      { name: 'priority', label: 'Prioridad', type: 'select', options: [
+        { value: 'low', label: 'Baja' },
+        { value: 'medium', label: 'Media' },
+        { value: 'high', label: 'Alta' },
+        { value: 'urgent', label: 'Urgente' }
+      ], required: true },
+      { name: 'status', label: 'Estado', type: 'select', options: [
+        { value: 'open', label: 'Abierto' },
+        { value: 'in_progress', label: 'En Progreso' },
+        { value: 'resolved', label: 'Resuelto' },
+        { value: 'closed', label: 'Cerrado' }
+      ], required: true },
+      { name: 'assignedTo', label: 'Asignar a', type: 'text', placeholder: 'Nombre del técnico' },
+      { name: 'estimatedHours', label: 'Horas Estimadas', type: 'number', placeholder: '0' },
+      { name: 'dueDate', label: 'Fecha Límite', type: 'date' },
+      { name: 'tags', label: 'Etiquetas (separadas por coma)', type: 'text', placeholder: 'wordpress, hosting, email' },
+      { name: 'notes', label: 'Notas Adicionales', type: 'textarea', rows: 2 }
+    ],
+    data: ticket,
+    onSubmit: (values) => {
+      // Convertir tags de string a array
+      if (values.tags && typeof values.tags === 'string') {
+        values.tags = values.tags.split(',').map(t => t.trim()).filter(t => t);
+      }
+      
+      if (ticketId) {
+        const success = ticketsService.update(ticketId, values);
+        if (success) this.navigate('tickets');
+        return success;
+      } else {
+        const newTicket = ticketsService.create(values);
+        if (newTicket) this.navigate('tickets');
+        return newTicket !== null;
+      }
+    }
+  });
+}
+
+renderPayments(container) {
+  const payments = paymentsService.getAll();
+  const clients = clientsService.getAll();
+  const stats = paymentsService.getStats();
+  
+  container.innerHTML = `
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Pagos y Facturación</h2>
+          <p style="color: var(--color-text-secondary);">${payments.length} pago${payments.length !== 1 ? 's' : ''} registrado${payments.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button class="btn btn-primary" onclick="window.app.openPaymentForm()">
+          <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nuevo Pago
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-4" style="margin-bottom: var(--space-lg);">
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Pendientes</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-warning);">${stats.pending}</div>
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 4px;">${formatCurrency(stats.totalPending)}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Vencidos</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-error);">${stats.overdue}</div>
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-top: 4px;">${formatCurrency(stats.totalOverdue)}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Pagados</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-success);">${stats.paid}</div>
+        </div>
+        <div class="card">
+          <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin-bottom: 4px;">Total</div>
+          <div style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--color-text-primary);">${stats.total}</div>
+        </div>
+      </div>
+    </div>
+    
+    ${payments.length > 0 ? `
+      <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--color-border-primary);">
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Factura</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Cliente</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Descripción</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Monto</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Vencimiento</th>
+              <th style="text-align: left; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Estado</th>
+              <th style="text-align: right; padding: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); font-weight: 600;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${payments.map(payment => {
+              const client = clients.find(c => c.id === payment.clientId);
+              const isOverdue = payment.status === 'pending' && new Date(payment.dueDate) < new Date();
+              
+              return `
+                <tr style="border-bottom: 1px solid var(--color-border-secondary);">
+                  <td style="padding: var(--space-sm); font-weight: 600;">${payment.invoiceNumber}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${client?.name || '-'}</td>
+                  <td style="padding: var(--space-sm); color: var(--color-text-secondary);">${truncate(payment.description, 40)}</td>
+                  <td style="padding: var(--space-sm); text-align: right; font-weight: 700; color: var(--color-text-primary);">${formatCurrency(payment.amount, payment.currency)}</td>
+                  <td style="padding: var(--space-sm);">
+                    <div style="color: ${isOverdue ? 'var(--color-error)' : 'var(--color-text-secondary)'};">${formatDate(payment.dueDate)}</div>
+                    ${payment.paidDate ? `<div style="font-size: var(--font-size-xs); color: var(--color-success);">Pagado: ${formatDate(payment.paidDate)}</div>` : ''}
+                  </td>
+                  <td style="padding: var(--space-sm);">
+                    <span style="padding: 4px 8px; background: ${getStatusBgColor(payment.status)}; color: ${getStatusColor(payment.status)}; border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 600; text-transform: capitalize;">
+                      ${payment.status === 'paid' ? 'Pagado' : payment.status === 'pending' ? 'Pendiente' : 'Vencido'}
+                    </span>
+                  </td>
+                  <td style="padding: var(--space-sm); text-align: right;">
+                    ${payment.status !== 'paid' ? `
+                      <button 
+                        class="btn-icon" 
+                        onclick="if(confirm('¿Marcar como pagado?')) { paymentsService.markAsPaid('${payment.id}'); window.app.navigate('payments'); }" 
+                        title="Marcar como Pagado"
+                        style="color: var(--color-success);"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </button>
+                    ` : ''}
+                    <button class="btn-icon" onclick="window.app.openPaymentForm('${payment.id}')" title="Editar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-icon" onclick="if(confirm('¿Eliminar?')) { paymentsService.delete('${payment.id}'); window.app.navigate('payments'); }" title="Eliminar">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : `
+      <div class="card" style="text-align: center; padding: var(--space-2xl);">
+        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay pagos registrados</p>
+        <button class="btn btn-primary" onclick="window.app.openPaymentForm()">Registrar Primer Pago</button>
+      </div>
+    `}
+  `;
+}
+
+openPaymentForm(paymentId = null) {
+  const payment = paymentId ? paymentsService.getById(paymentId) : {};
+  const clients = clientsService.getAll({ status: 'active' });
+  
+  modal.createForm({
+    title: paymentId ? 'Editar Pago' : 'Nuevo Pago',
+    fields: [
+      { name: 'clientId', label: 'Cliente', type: 'select', options: clients.map(c => ({ value: c.id, label: c.name })), required: true },
+      { name: 'invoiceNumber', label: 'Número de Factura', type: 'text', required: true, placeholder: 'INV-001' },
+      { name: 'description', label: 'Descripción', type: 'text', required: true, placeholder: 'Hosting mensual, Desarrollo web...' },
+      { name: 'amount', label: 'Monto', type: 'number', required: true, placeholder: '0.00' },
+      { name: 'currency', label: 'Moneda', type: 'select', options: [
+        { value: 'USD', label: 'USD' },
+        { value: 'EUR', label: 'EUR' },
+        { value: 'MXN', label: 'MXN' }
+      ] },
+      { name: 'dueDate', label: 'Fecha de Vencimiento', type: 'date', required: true },
+      { name: 'status', label: 'Estado', type: 'select', options: [
+        { value: 'pending', label: 'Pendiente' },
+        { value: 'paid', label: 'Pagado' },
+        { value: 'overdue', label: 'Vencido' }
+      ], required: true },
+      { name: 'paidDate', label: 'Fecha de Pago', type: 'date' },
+      { name: 'paymentMethod', label: 'Método de Pago', type: 'select', options: [
+        { value: 'bank_transfer', label: 'Transferencia Bancaria' },
+        { value: 'credit_card', label: 'Tarjeta de Crédito' },
+        { value: 'paypal', label: 'PayPal' },
+        { value: 'cash', label: 'Efectivo' },
+        { value: 'check', label: 'Cheque' },
+        { value: 'other', label: 'Otro' }
+      ] },
+      { name: 'transactionId', label: 'ID de Transacción', type: 'text', placeholder: 'TXN-123456' },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 2 }
+    ],
+    data: payment,
+    onSubmit: (values) => {
+      if (paymentId) {
+        const success = paymentsService.update(paymentId, values);
+        if (success) this.navigate('payments');
+        return success;
+      } else {
+        const newPayment = paymentsService.create(values);
+        if (newPayment) this.navigate('payments');
+        return newPayment !== null;
+      }
+    }
+  });
+}
 
   render404(container) {
     this.renderPlaceholder(container, '404', 'Página no encontrada');
