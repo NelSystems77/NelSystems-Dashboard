@@ -66,7 +66,7 @@ class App {
   async registerServiceWorker() {
     if ('serviceWorker' in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js');
+        const registration = await navigator.serviceWorker.register('./service-worker.js');
         console.log('Service Worker registrado:', registration.scope);
       } catch (error) {
         console.error('Error registrando Service Worker:', error);
