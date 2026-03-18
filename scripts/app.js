@@ -10,6 +10,14 @@ import db from './database/db.js';
 import dashboardService from './services/dashboard.service.js';
 import clientsService from './services/clients.service.js';
 import { formatCurrency, formatDate, getStatusColor, getInitials, showToast } from './utils/helpers.js';
+import modal from './components/Modal.js';
+import projectsService from './services/projects.service.js';
+import servicesService from './services/services.service.js';
+import domainsService from './services/domains.service.js';
+import hostingService from './services/hosting.service.js';
+import licensesService from './services/licenses.service.js';
+import ticketsService from './services/tickets.service.js';
+import paymentsService from './services/payments.service.js';
 
 class App {
   constructor() {
@@ -240,6 +248,57 @@ class App {
         item.classList.add('active');
       }
     });
+
+//Agregar método openClientForm a la clase App:
+
+```javascript
+/**
+ * Abre formulario para crear/editar cliente
+ */
+openClientForm(clientId = null) {
+  const client = clientId ? clientsService.getById(clientId) : {};
+  
+  modal.createForm({
+    title: clientId ? 'Editar Cliente' : 'Nuevo Cliente',
+    fields: [
+      { name: 'name', label: 'Nombre', type: 'text', required: true },
+      { name: 'company', label: 'Empresa', type: 'text' },
+      { name: 'email', label: 'Email', type: 'email', required: true },
+      { name: 'phone', label: 'Teléfono', type: 'tel' },
+      { name: 'address', label: 'Dirección', type: 'text' },
+      { name: 'taxId', label: 'RFC/Tax ID', type: 'text' },
+      { name: 'website', label: 'Sitio Web', type: 'url' },
+      { 
+        name: 'status', 
+        label: 'Estado', 
+        type: 'select',
+        options: [
+          { value: 'active', label: 'Activo' },
+          { value: 'inactive', label: 'Inactivo' },
+          { value: 'suspended', label: 'Suspendido' }
+        ],
+        required: true
+      },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 4 }
+    ],
+    data: client,
+    onSubmit: (values) => {
+      if (clientId) {
+        const success = clientsService.update(clientId, values);
+        if (success) {
+          this.navigate('clients'); // Recargar vista
+        }
+        return success;
+      } else {
+        const newClient = clientsService.create(values);
+        if (newClient) {
+          this.navigate('clients'); // Recargar vista
+        }
+        return newClient !== null;
+      }
+    }
+  });
+}
     
     // Cerrar sidebar en mobile
     if (window.innerWidth < 768) {
@@ -471,7 +530,7 @@ class App {
           <h2 style="font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 4px;">Clientes</h2>
           <p style="color: var(--color-text-secondary);">${clients.length} cliente${clients.length !== 1 ? 's' : ''} registrado${clients.length !== 1 ? 's' : ''}</p>
         </div>
-        <button class="btn btn-primary" onclick="alert('Función de crear cliente en desarrollo')">
+        <button class="btn btn-primary" onclick="app.openClientForm()">
           <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -510,7 +569,7 @@ class App {
       ` : `
         <div class="card" style="text-align: center; padding: var(--space-2xl);">
           <p style="color: var(--color-text-secondary); margin-bottom: var(--space-md);">No hay clientes registrados</p>
-          <button class="btn btn-primary" onclick="alert('Función de crear cliente en desarrollo')">Crear Primer Cliente</button>
+          <button class="btn btn-primary" onclick="window.app.openClientForm()">Crear Primer Cliente</button>
         </div>
       `}
     `;
