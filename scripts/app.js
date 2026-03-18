@@ -376,6 +376,80 @@ openClientForm(clientId = null) {
     }
   });
 }
+
+/**
+ * Abre formulario para crear/editar proyecto
+ */
+openProjectForm(projectId = null) {
+  const project = projectId ? projectsService.getById(projectId) : {};
+  const clients = clientsService.getAll({ status: 'active' });
+  
+  modal.createForm({
+    title: projectId ? 'Editar Proyecto' : 'Nuevo Proyecto',
+    fields: [
+      { 
+        name: 'clientId', 
+        label: 'Cliente', 
+        type: 'select',
+        options: clients.map(c => ({ value: c.id, label: c.name })),
+        required: true
+      },
+      { name: 'name', label: 'Nombre del Proyecto', type: 'text', required: true },
+      { name: 'description', label: 'Descripción', type: 'textarea', rows: 3 },
+      { 
+        name: 'status', 
+        label: 'Estado', 
+        type: 'select',
+        options: [
+          { value: 'planning', label: 'Planificación' },
+          { value: 'in_progress', label: 'En Progreso' },
+          { value: 'testing', label: 'Testing' },
+          { value: 'deployed', label: 'Desplegado' },
+          { value: 'maintenance', label: 'Mantenimiento' },
+          { value: 'cancelled', label: 'Cancelado' }
+        ],
+        required: true
+      },
+      { 
+        name: 'priority', 
+        label: 'Prioridad', 
+        type: 'select',
+        options: [
+          { value: 'low', label: 'Baja' },
+          { value: 'medium', label: 'Media' },
+          { value: 'high', label: 'Alta' },
+          { value: 'critical', label: 'Crítica' }
+        ],
+        required: true
+      },
+      { name: 'startDate', label: 'Fecha de Inicio', type: 'date' },
+      { name: 'endDate', label: 'Fecha de Fin', type: 'date' },
+      { name: 'deliveryDate', label: 'Fecha de Entrega', type: 'date' },
+      { name: 'budget', label: 'Presupuesto', type: 'number', placeholder: '0.00' },
+      { name: 'responsible', label: 'Responsable', type: 'text' },
+      { name: 'repository', label: 'Repositorio (URL)', type: 'url', placeholder: 'https://github.com/...' },
+      { name: 'productionUrl', label: 'URL Producción', type: 'url', placeholder: 'https://...' },
+      { name: 'stagingUrl', label: 'URL Staging', type: 'url', placeholder: 'https://staging...' },
+      { name: 'notes', label: 'Notas', type: 'textarea', rows: 3 }
+    ],
+    data: project,
+    onSubmit: (values) => {
+      if (projectId) {
+        const success = projectsService.update(projectId, values);
+        if (success) {
+          this.navigate('projects');
+        }
+        return success;
+      } else {
+        const newProject = projectsService.create(values);
+        if (newProject) {
+          this.navigate('projects');
+        }
+        return newProject !== null;
+      }
+    }
+  });
+}
   
   /**
    * Renderiza el dashboard
