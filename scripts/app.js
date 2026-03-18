@@ -328,9 +328,7 @@ class App {
     document.title = `${title} - NelSystems Dashboard`;
   }
 
-//Agregar método openClientForm a la clase App:
 
-```javascript
 /**
  * Abre formulario para crear/editar cliente
  */
