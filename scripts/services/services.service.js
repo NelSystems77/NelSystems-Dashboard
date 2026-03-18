@@ -5,7 +5,7 @@
  */
 
 import db from '../database/db.js';
-import { isUpcoming, daysUntil, addMonths, addYears, showToast } from '../utils/helpers.js';
+import { daysUntil, addMonths, addYears, showToast } from '../utils/helpers.js';
 
 class ServicesService {
   /**
