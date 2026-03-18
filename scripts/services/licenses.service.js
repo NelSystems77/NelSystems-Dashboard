@@ -194,6 +194,16 @@ class LicensesService {
 
     return { valid: true };
   }
+getStats() {
+    const licenses = this.getAll();
+    return {
+      total: licenses.length,
+      active: licenses.filter(l => l.status === 'active').length,
+      expired: licenses.filter(l => l.status === 'expired').length,
+      cancelled: licenses.filter(l => l.status === 'cancelled').length,
+      totalSeats: licenses.reduce((sum, l) => sum + (l.seats || 0), 0)
+    };
+  }
 }
 
 export const licensesService = new LicensesService();
